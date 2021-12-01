@@ -41,8 +41,18 @@ class Client(discord.Client):
 
 		# $rufus list
 		elif len(tokens) == 2 and tokens[1] == "list":
-			await message.reply("Something went wrong! Please report this to skat#4502. [err 1]",
-				mention_author=True)
+
+			try:
+
+				entries = session.query(Watcher).filter_by(userID=message.author.id)
+
+				msg  = "You're currently watching the following CRNs:\n"
+				msg += "- " + "\n- ".join([str(entry.CRN) for entry in entries])
+				await message.reply(msg, mention_author=True)
+
+			except:
+				await message.reply("Something went wrong! Please report this to skat#4502. [err 1]",
+					mention_author=True)
 
 		# $rufus watch <CRN>
 		elif len(tokens) == 3 and tokens[1] == "watch":
