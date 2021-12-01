@@ -52,7 +52,28 @@ class Client(discord.Client):
 
 		# $rufus unwatch <CRN>
 		elif len(tokens) == 3 and tokens[1] == "unwatch":
-			await message.reply(f"I won't give you @s for {tokens[2]} anymore.", mention_author=True)
+
+			try:
+
+				# CRNs are all 5 numerical digits.
+				tokens[2] = int(tokens[2])
+				assert tokens[2] <= 99999 and tokens[2] >= 10000, "Out of bounds CRN."
+
+				# Check if the entry exists in the DB. If it does, then remove it.
+				entry = session.query(Watcher).filter_by(userID=message.author.id, CRN=tokens[2]).first()
+
+				if not entry:
+					await message.reply(f"You weren't watching {tokens[2]} in the first place.",
+						mention_author=True)
+				else:
+					session.delete(entry)
+					session.commit()
+					await message.reply(f"I won't alert you for {tokens[2]} anymore.",
+						mention_author=True)
+
+			except:
+				await message.reply("Something went wrong! Please report this to skat#4502. [err 2]",
+					mention_author=True)
 
 		else:
 			await message.reply("Confused? Try running `$rufus help`.", mention_author=True)
@@ -64,7 +85,7 @@ class Client(discord.Client):
 		"""
 
 		channel = self.get_channel(CHANNEL)
-		await channel.send("AAAAAAAAAAHHHHHHH")
+		#await channel.send("AAAAAAAAAAHHHHHHH")
 
 client = Client()
 client.run(TOKEN)
