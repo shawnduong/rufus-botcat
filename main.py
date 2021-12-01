@@ -2,6 +2,8 @@
 
 import discord
 from discord.ext import tasks
+
+from lib.db import *
 from settings import *
 
 class Client(discord.Client):
@@ -29,7 +31,24 @@ class Client(discord.Client):
 
 		# $rufus watch <CRN>
 		elif len(tokens) == 3 and tokens[1] == "watch":
-			await message.reply(f"I'll give you an @ know when course CRN {tokens[2]} opens up!", mention_author=True)
+
+			try:
+
+				# CRNs are all 5 numerical digits.
+				tokens[2] = int(tokens[2])
+				assert tokens[2] <= 99999 and tokens[2] >= 10000, "Out of bounds CRN."
+
+				# Add the user to the DB.
+				watcher = Watcher(message.author.id, tokens[2])
+				session.add(watcher)
+				session.commit()
+
+				await message.reply(f"I'll give you an @ when course CRN {tokens[2]} opens up!",
+					mention_author=True)
+
+			except:
+				await message.reply("Something went wrong! Please report this to skat#4502. [err 1]",
+					mention_author=True)
 
 		# $rufus unwatch <CRN>
 		elif len(tokens) == 3 and tokens[1] == "unwatch":
