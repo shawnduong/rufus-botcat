@@ -6,6 +6,12 @@ from discord.ext import tasks
 from lib.db import *
 from settings import *
 
+helpDialogue  = "Hi, I'm Rufus Botcat. I monitor classes and alert you when seats open up. Here's how to use me:\n"
+helpDialogue += "- `$rufus help` - Display this message.\n"
+helpDialogue += "- `$rufus list` - List all CRNs you're watching.\n"
+helpDialogue += "- `$rufus watch <CRN>` - Start watching a specific CRN.\n"
+helpDialogue += "- `$rufus unwatch <CRN>` - Stop watching a specific CRN.\n"
+
 class Client(discord.Client):
 
 	async def on_ready(self):
@@ -27,7 +33,16 @@ class Client(discord.Client):
 
 		# $rufus help
 		if len(tokens) == 2 and tokens[1] == "help":
-			await message.reply(f"There'll be a help menu here one day.", mention_author=True)
+			try:
+				await message.reply(helpDialogue, mention_author=True)
+			except:
+				await message.reply("Something went wrong! Please report this to skat#4502. [err 0]",
+					mention_author=True)
+
+		# $rufus list
+		elif len(tokens) == 2 and tokens[1] == "list":
+			await message.reply("Something went wrong! Please report this to skat#4502. [err 1]",
+				mention_author=True)
 
 		# $rufus watch <CRN>
 		elif len(tokens) == 3 and tokens[1] == "watch":
@@ -47,7 +62,7 @@ class Client(discord.Client):
 					mention_author=True)
 
 			except:
-				await message.reply("Something went wrong! Please report this to skat#4502. [err 1]",
+				await message.reply("Something went wrong! Please report this to skat#4502. [err 2]",
 					mention_author=True)
 
 		# $rufus unwatch <CRN>
@@ -72,7 +87,7 @@ class Client(discord.Client):
 						mention_author=True)
 
 			except:
-				await message.reply("Something went wrong! Please report this to skat#4502. [err 2]",
+				await message.reply("Something went wrong! Please report this to skat#4502. [err 3]",
 					mention_author=True)
 
 		else:
