@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
 
 import discord
+import json
+
 from discord.ext import tasks
+from threading import Thread
 
 from lib.db import *
+from lib.scrape import *
 from settings import *
 
 helpDialogue  = "Hi, I'm Rufus Botcat. I monitor classes and alert you when seats open up. Here's how to use me:\n"
@@ -11,6 +15,8 @@ helpDialogue += "- `$rufus help` - Display this message.\n"
 helpDialogue += "- `$rufus list` - List all CRNs you're watching.\n"
 helpDialogue += "- `$rufus watch <CRN>` - Start watching a specific CRN.\n"
 helpDialogue += "- `$rufus unwatch <CRN>` - Stop watching a specific CRN.\n"
+
+URLs = json.loads(open("URLs.json").read())
 
 class Client(discord.Client):
 
@@ -109,8 +115,39 @@ class Client(discord.Client):
 		Check for open seats in CRNs and notify watching users.
 		"""
 
+		print(":: Scraping and alerting...", end=" ")
+
+		# Scrape all CRNs being watched.
+
+		threads = []
+		outputs = {}
+
+		for CRN in session.query(Watcher.CRN).distinct():
+			CRN = CRN[0]
+			if str(CRN) in URLs.keys():
+				threads.append(Thread(target=scrape, args=(CRN, URLs[str(CRN)], outputs)))
+
+		for thread in threads: thread.start()
+		for thread in threads: thread.join()
+
+		# Ping all users that were watching CRNs.
+
 		channel = self.get_channel(CHANNEL)
-		#await channel.send("AAAAAAAAAAHHHHHHH")
+
+		for k in outputs.keys():
+
+			if outputs[k] > 0:
+
+				msg = ""
+				watchers = session.query(Watcher).filter_by(CRN=k).distinct()
+
+				for watcher in watchers:
+					msg += f"<@{watcher.userID}> "
+
+				msg += f"\n**CRN {k} has {outputs[k]} open seat(s)!**"
+				await channel.send(msg)
+
+		print("Done.")
 
 client = Client()
 client.run(TOKEN)

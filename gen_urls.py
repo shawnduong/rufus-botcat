@@ -25,7 +25,7 @@ def main():
 	for table in tables:
 		for row in table.find_all("tr")[1::]:
 			course = row.find("td")
-			if re.match("\d{5}", course.text):
+			if course and re.match("\d{5}", course.text):
 				data[course.text] = course.find("a")["href"]
 
 	# Save everything to URLs.json.
